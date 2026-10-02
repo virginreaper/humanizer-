@@ -22,7 +22,7 @@ It does not "fix" his comma splices or run-ons on purpose, those are his voice.
    - Vague attribution ("studies show") and lists of three: name a source if the user gave one, else
      leave the claim as is and tell the user it needs a source.
    - Anything that reads stiff or changed the meaning. Meaning and facts must not change.
-   - Apply the rules in the user's existing humanizer skill (banned vocabulary, no negative
+   - Apply `references/voice.md` and the rules in the user's existing humanizer skill (banned vocabulary, no negative
      parallelism, uneven sentence rhythm, no summary closer) on top, silently.
 4. Reply with the final text. At most one short line on what it flagged. No lecture, no
    before/after table unless asked.
@@ -34,3 +34,11 @@ It does not "fix" his comma splices or run-ons on purpose, those are his voice.
 - If the text is short (under ~40 words), skip the script and just rewrite by hand in his style.
 - To update the profile, the user adds new writing to `samples/<register>/` in the GitHub repo
   virginreaper/humanizer- and rebuilds the skill.
+
+## Voice reference
+
+`references/voice.md` holds the voice rules and Ayaahn's measured writing habits (sentence length, contractions,
+dash and quote style, phrases he really uses). Read it in step 3, and when writing fresh text for him rather than
+rewriting. The same rules, plus the visual kit, live in the Humanizer design system:
+https://claude.ai/artifact/RHsQTRdybu3Gnt7HNyzuAd (private; the file above is the self-contained copy).
+Keep both in step when the pattern lists in `scripts/humanizer/patterns.py` change.
