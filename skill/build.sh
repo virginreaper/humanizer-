@@ -7,3 +7,5 @@ cp profile.json skill/ayaahn-humanizer/scripts/profile.json && rm profile.json
 rm -rf skill/ayaahn-humanizer/scripts/humanizer && cp -r humanizer skill/ayaahn-humanizer/scripts/humanizer
 find skill -name __pycache__ -prune -exec rm -rf {} +
 cd skill && rm -f ayaahn-humanizer.zip && zip -qr ayaahn-humanizer.zip ayaahn-humanizer
+# keep the Claude Code copy (/ayaahn-humanizer) in sync
+rm -rf ../.claude/skills/ayaahn-humanizer && mkdir -p ../.claude/skills && cp -r ayaahn-humanizer ../.claude/skills/
