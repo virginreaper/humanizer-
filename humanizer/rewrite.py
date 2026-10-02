@@ -12,33 +12,36 @@ _SUBJECT_STARTS = {"the", "it", "this", "that", "he", "she", "they", "we", "ther
                    "these", "those", "a", "an", "its", "their", "some", "most", "many"}
 
 
-def _phrases(t):
+def _phrases(t, own):
     for pat, rep in P.PHRASES:
         t = re.sub(r"\b" + pat if pat[0] not in "(\\" or pat.startswith("(?") else pat,
-                   lambda m, r=rep: match_case(m.group(0), r), t, flags=re.I)
+                   lambda m, r=rep: m.group(0) if m.group(0).lower().strip(" ,") in own else match_case(m.group(0), r),
+                   t, flags=re.I)
     return t
 
 
-def _vocab(t):
+def _vocab(t, own):
     def landscape(m):
         return match_case(m.group(1), m.group(1)) + (" scene" if m.group(1).lower() in P.LANDSCAPE_CTX else " landscape")
     t = re.sub(P.LANDSCAPE, landscape, t, flags=re.I)
     pat = r"\b(" + "|".join(sorted(map(re.escape, P.WORDS), key=len, reverse=True)) + r")\b"
-    return re.sub(pat, lambda m: match_case(m.group(1), P.WORDS[m.group(1).lower()]), t, flags=re.I)
+    return re.sub(pat, lambda m: m.group(1) if m.group(1).lower() in own
+                  else match_case(m.group(1), P.WORDS[m.group(1).lower()]), t, flags=re.I)
 
 
 def _structure(t):
     # "It's not just X, it's Y." -> "It's Y."
     t = re.sub(r"\b(?:it|this|that)(?:'|’)?s? (?:is )?not (?:just |only |merely |simply )?(?:about )?[^.;!?]{2,80}?[,;—-]+\s*(?:but |it(?:'|’)s |it is |this is )(?:also |about )?",
-               lambda m: "It's ", t, flags=re.I)
+               lambda m: "It is ", t, flags=re.I)
     # trailing "-ing" riders: ", highlighting how ..." -> "."
     tails = "|".join(map(re.escape, P.TAIL_VERBS))
-    t = re.sub(rf",\s+(?:{tails})\b[^.!?]*([.!?])", r"\1", t, flags=re.I)
+    t = re.sub(rf"(?:,|\s—|\s--)\s+(?:{tails})\b[^.!?]*([.!?])", r"\1", t, flags=re.I)
     return t
 
 
-def _typography(t, strip_bold=True):
-    t = t.translate({0x201C: '"', 0x201D: '"', 0x2018: "'", 0x2019: "'"})
+def _typography(t, profile, strip_bold=True):
+    if profile["curly_quote_rate"] < 0.05:
+        t = t.translate({0x201C: '"', 0x201D: '"', 0x2018: "'", 0x2019: "'"})
     if strip_bold:
         t = re.sub(r"\*\*([^*\n]+)\*\*", r"\1", t)
     t = re.sub(r"^(#+ )[^\w\n]*", r"\1", t, flags=re.M)       # emoji/arrows in headings
@@ -49,15 +52,16 @@ def _dashes(t, profile, rng):
     n_words = max(len(words(t)), 1)
     budget = round(profile["em_dashes_per_100w"] * n_words / 100)
     ell = profile["ellipses_per_100w"] > 0.15
-    dashes = list(re.finditer(r"\s*(?:—|--)\s*", t))
+    dashes = list(re.finditer(r"\s*—\s*", t))
+    token, ell_tok = profile["dash_token"], profile["ellipsis_token"]
     keep = set(rng.sample(range(len(dashes)), min(budget, len(dashes)))) if dashes else set()
     out, last = [], 0
     for i, m in enumerate(dashes):
         out.append(t[last:m.start()])
         if i in keep:
-            out.append(" — ")
+            out.append(token)
         elif ell and rng.random() < min(profile["ellipses_per_100w"] / 0.5, 0.6):
-            out.append("... ")
+            out.append(ell_tok + " ")
         else:
             out.append(", ")
         last = m.end()
@@ -67,7 +71,9 @@ def _dashes(t, profile, rng):
 
 def _contractions(t, profile, rng):
     p = min(profile["contractions_per_100w"] / 2.0, 1.0)      # ~2/100w => always
+    curly = profile["curly_quote_rate"] > 0.5
     for pat, rep in P.CONTRACTIONS:
+        rep = rep.replace("'", "’") if curly else rep
         t = re.sub(pat, lambda m, r=rep: match_case(m.group(0), r) if rng.random() < p else m.group(0),
                    t, flags=re.I if pat[0] != r"\bI" else 0)
     return t
@@ -114,18 +120,24 @@ def _casual(t, profile):
     return t
 
 
-def humanize(text, profile=None, seed=None, strip_bold=True, rhythm=True):
+def humanize(text, profile=None, seed=None, strip_bold=True, rhythm=True, register="auto"):
+    from .style import pick_register
     profile = {**DEFAULT_PROFILE, **(profile or {})}
+    if register == "auto":
+        profile = pick_register(profile, text)
+    elif register in profile.get("registers", {}):
+        profile = {**profile, **profile["registers"][register], "register": register}
+    own = set(profile["own_phrases"])
     rng = random.Random(seed)
     result = []
     for is_code, chunk in split_fences(text):
         if is_code:
             result.append(chunk)
             continue
-        t = _typography(chunk, strip_bold)
-        t = _phrases(t)
+        t = _typography(chunk, profile, strip_bold)
+        t = _phrases(t, own)
         t = _structure(t)
-        t = _vocab(t)
+        t = _vocab(t, own)
         t = _dashes(t, profile, rng)
         t = _contractions(t, profile, rng)
         pars = re.split(r"(\n\s*\n)", t)
@@ -138,5 +150,7 @@ def humanize(text, profile=None, seed=None, strip_bold=True, rhythm=True):
         if profile["lowercase_start_rate"] > 0.6:
             t = re.sub(r"(^|(?<=[.!?]) )([A-Z])(?=[a-z])", lambda m: m.group(1) + m.group(2).lower(), t, flags=re.M)
         t = _casual(t, profile)
+        if profile["curly_quote_rate"] > 0.5:
+            t = re.sub(r"(?<=\w)'(?=\w)", "’", t)
         result.append(t)
     return "".join(result).strip() + "\n"

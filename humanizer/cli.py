@@ -5,7 +5,7 @@ from pathlib import Path
 
 from .detect import score
 from .rewrite import humanize
-from .style import analyze, build_profile, load_profile
+from .style import analyze, build_profile, load_profile, pick_register
 
 
 def main(argv=None):
@@ -16,6 +16,7 @@ def main(argv=None):
     ap.add_argument("--profile", help="saved profile JSON (overrides --samples)")
     ap.add_argument("--learn", action="store_true", help="analyze samples, save profile.json, and exit")
     ap.add_argument("--score", action="store_true", help="only print the AI-tell report")
+    ap.add_argument("--register", default="auto", help="auto (closest to the draft), or a samples sub-folder name, e.g. academic")
     ap.add_argument("--seed", type=int, help="make output repeatable")
     ap.add_argument("--keep-bold", action="store_true")
     ap.add_argument("--no-rhythm", action="store_true", help="skip sentence splitting/merging")
@@ -33,9 +34,10 @@ def main(argv=None):
         return 0
 
     prof = load_profile(a.profile, a.samples)
-    out = humanize(text, prof, seed=a.seed, strip_bold=not a.keep_bold, rhythm=not a.no_rhythm)
+    out = humanize(text, prof, seed=a.seed, register=a.register, strip_bold=not a.keep_bold, rhythm=not a.no_rhythm)
+    reg = pick_register(prof, text).get("register", "none") if a.register == "auto" else a.register
     before, after = score(text)["score"], score(out)["score"]
-    sys.stderr.write(f"ai-tell score: {before} -> {after}  (style samples used: {prof['samples']})\n")
+    sys.stderr.write(f"ai-tell score: {before} -> {after}  (style: {reg}; samples used: {prof['samples']})\n")
     if a.out:
         Path(a.out).write_text(out, encoding="utf-8")
     else:

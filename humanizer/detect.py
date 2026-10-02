@@ -28,7 +28,6 @@ def findings(text):
         "needs a named source (cannot be fixed automatically)")
     add("em-dashes", max(text.count("—") - 1, 0), "em dashes beyond the first")
     add("bold", len(re.findall(r"\*\*[^*]+\*\*", text)), "decorative bold")
-    add("curly-quotes", len(re.findall("[“”‘’]", text)), "curly quotes")
     add("emoji-headings", len(re.findall(r"^#+ .*[\U0001F300-\U0001FAFF☀-➿]", text, re.M)),
         "emoji in headings")
     add("triads", len(re.findall(r"\b[\w-]+, [\w-]+,? and [\w-]+\b", low)),
@@ -48,7 +47,7 @@ def score(text):
     n = max(len(words(text)), 1)
     weights = {"ai-vocabulary": 6, "stock-phrases": 8, "negative-parallelism": 10,
                "ing-tail": 7, "vague-attribution": 6, "em-dashes": 3, "bold": 2,
-               "curly-quotes": 1, "emoji-headings": 4, "triads": 3}
+               "emoji-headings": 4, "triads": 3}
     raw = sum(weights[x["category"]] * x["count"] for x in f)
     s = min(100.0, raw * 100 / n * 2.2)
     b = burstiness(text)

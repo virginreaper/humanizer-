@@ -41,7 +41,8 @@ PHRASES = [
     (r"for the purpose of ", "for "),
     (r"a (?:wide|broad|vast) (?:range|array|variety) of ", "many "),
     (r"a (?:myriad|plethora) of ", "lots of "),
-    (r"plays? an? (?:crucial|pivotal|vital|key|significant) role in ", "matters for "),
+    (r"plays an? (?:crucial|pivotal|vital|key|significant) role in ", "matters for "),
+    (r"play an? (?:crucial|pivotal|vital|key|significant) role in ", "matter for "),
     (r"stands as a testament to ", "shows "),
     (r"stand as a testament to ", "show "),
     (r"(?:is|was) a testament to ", "shows "),
@@ -76,7 +77,7 @@ WORDS = {
     "showcase": "show", "showcases": "shows", "showcasing": "showing",
     "realm": "area", "multifaceted": "complex", "robust": "solid",
     "seamless": "smooth", "seamlessly": "smoothly", "holistic": "whole",
-    "comprehensive": "full", "leverage": "use", "leverages": "uses",
+    "comprehensive": "thorough", "leverage": "use", "leverages": "uses",
     "leveraging": "using", "leveraged": "used", "harness": "use",
     "harnesses": "uses", "harnessing": "using", "empower": "let",
     "empowers": "lets", "empowering": "letting", "elevate": "raise",
@@ -96,7 +97,7 @@ WORDS = {
 LANDSCAPE = r"\b(\w+(?:-\w+)?) landscape\b"
 LANDSCAPE_CTX = {"political", "digital", "competitive", "evolving", "changing",
                  "modern", "current", "media", "legal", "economic", "cultural",
-                 "technological", "regulatory", "business", "market", "social"}
+                 "technological", "regulatory", "governance", "policy", "data", "business", "market", "social"}
 
 # detection only (need a real source, can't be fixed mechanically)
 VAGUE_ATTRIBUTION = (r"\b(?:studies (?:show|suggest|indicate)|research (?:shows|suggests|indicates)|"
