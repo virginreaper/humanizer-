@@ -60,3 +60,9 @@ This is rule-based, not a language model. It removes patterns; it can't make dul
 and no tool can promise to beat a given AI detector. Read the output before you send it.
 
 Tests: `python -m unittest discover -s tests -t .`
+
+## Use it inside Claude chat
+
+`skill/ayaahn-humanizer.zip` is a Claude Skill. In claude.ai: Settings > Capabilities > Skills > Upload skill,
+pick the zip, switch it on. Then paste text in any chat and say "humanize this".
+After adding new samples, rebuild the zip (see `skill/build.sh`).
