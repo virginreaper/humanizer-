@@ -34,3 +34,10 @@ It does not "fix" his comma splices or run-ons on purpose, those are his voice.
 - If the text is short (under ~40 words), skip the script and just rewrite by hand in his style.
 - To update the profile, the user adds new writing to `samples/<register>/` in the GitHub repo
   virginreaper/humanizer- and rebuilds the skill.
+
+## Design system
+
+The voice rules this skill applies (banned vocabulary, plain replacements, structures to avoid, tone for any
+product copy) are written up in the Humanizer design system: https://claude.ai/artifact/RHsQTRdybu3Gnt7HNyzuAd
+Read its `project/README.md` when writing copy for this tool, and keep both in step when the pattern lists in
+`scripts/humanizer/patterns.py` change.
