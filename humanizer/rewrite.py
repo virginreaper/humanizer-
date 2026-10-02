@@ -74,6 +74,8 @@ def _contractions(t, profile, rng):
     curly = profile["curly_quote_rate"] > 0.5
     for pat, rep in P.CONTRACTIONS:
         rep = rep.replace("'", "’") if curly else rep
+        if "n't" not in rep:                 # "here we are." must not become "here we're."
+            pat += r"(?=\s+[A-Za-z])"
         t = re.sub(pat, lambda m, r=rep: match_case(m.group(0), r) if rng.random() < p else m.group(0),
                    t, flags=re.I if pat[0] != r"\bI" else 0)
     return t
