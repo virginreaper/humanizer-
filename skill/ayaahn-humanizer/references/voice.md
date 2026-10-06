@@ -27,6 +27,8 @@ Never write these in product copy either: delve, tapestry, pivotal, crucial, vit
 | It's important to note that | (cut it) |
 | In conclusion | (cut it) |
 
+Also avoid: "Here's the thing", "To be clear", "Honestly?", "Read that again", flattery openers ("You're absolutely right"), hedge stacks ("could potentially"), "Despite these challenges... continues to thrive", "from X to Y" ranges with no real scale, and sentences that announce their own importance. Never add facts or invented personality when rewriting.
+
 Also avoid: "not X, it's Y" framing, trailing "-ing" riders ("highlighting the importance of…"), forced triads, even sentence rhythm, a summary closer.
 
 ## The author's voice

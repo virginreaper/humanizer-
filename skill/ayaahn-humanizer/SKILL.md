@@ -29,6 +29,8 @@ It does not "fix" his comma splices or run-ons on purpose, those are his voice.
 
 ## Rules
 
+- Do not over-humanize. Never add fragments for drama, fake candor ("Honestly?"), asides or personality he did not write. Remove and simplify only; a rewrite full of invented punch is its own fingerprint.
+- Check by hand what the script only flags: Title Case headings (keep proper nouns), bold-label bullets, false ranges ("from X to Y"), "despite challenges... continues to thrive", placeholders like [Name], and three sentences in a row with the same opening word.
 - Never add facts, never drop content, never change the user's argument or opinion.
 - Keep formal pieces formal (no contractions in `academic`), keep casual pieces casual.
 - If the text is short (under ~40 words), skip the script and just rewrite by hand in his style.

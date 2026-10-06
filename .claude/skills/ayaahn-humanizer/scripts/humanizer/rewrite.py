@@ -12,8 +12,36 @@ _SUBJECT_STARTS = {"the", "it", "this", "that", "he", "she", "they", "we", "ther
                    "these", "those", "a", "an", "its", "their", "some", "most", "many"}
 
 
+_PUA = "\ue000-\uf8ff"
+_LEAKS = [
+    # ChatGPT citation and reference markup that survived a copy-paste
+    re.compile(rf"[{_PUA}]*(?:cite|i|navlist)?(?:turn\d+(?:search|news|file|image|view)\d+)+[{_PUA}]*"),
+    re.compile(r":?contentReference\[oaicite:\d+\]\{index=\d+\}"),
+    re.compile(r"\boai_citation[:\w.-]*"),
+    re.compile(r"<\|endoftext\|>"),
+    re.compile(r"[ \t]*↩\ufe0e?\d*(?:[ \t]*↩\d*)*"),
+]
+_UTM_MID = re.compile(r"\?utm_source=(?:chatgpt\.com|openai)&")
+_UTM = re.compile(r"[?&]utm_source=(?:chatgpt\.com|openai)(?![\w-]|\.\w)")
+_HEDGE = re.compile(r"\b(could|might|may|can) (?:potentially|possibly|conceivably|arguably)\b", re.I)
+_EMOJI = "\U0001F300-\U0001FAFF\u2600-\u27BF\u2B50\u2B55"
+_EMOJI_LEAD = re.compile(rf"^([ \t]*(?:[-*+]|\d+[.)])?[ \t]*)[{_EMOJI}]\ufe0f?[ \t]+", re.M)
+
+
+def _leaks(t):
+    t = _UTM_MID.sub("?", t)
+    t = _UTM.sub("", t)
+    for rx in _LEAKS:
+        t = rx.sub("", t)
+    return t
+
+
+def _hedges(t):
+    return _HEDGE.sub(lambda m: m.group(1), t)
+
+
 def _phrases(t, own):
-    for pat, rep in P.PHRASES:
+    for pat, rep in P.PHRASES + P.TELL_PHRASES:
         t = re.sub(r"\b" + pat if pat[0] not in "(\\" or pat.startswith("(?") else pat,
                    lambda m, r=rep: m.group(0) if m.group(0).lower().strip(" ,") in own else match_case(m.group(0), r),
                    t, flags=re.I)
@@ -45,6 +73,7 @@ def _typography(t, profile, strip_bold=True):
     if strip_bold:
         t = re.sub(r"\*\*([^*\n]+)\*\*", r"\1", t)
     t = re.sub(r"^(#+ )[^\w\n]*", r"\1", t, flags=re.M)       # emoji/arrows in headings
+    t = _EMOJI_LEAD.sub(r"\1", t)                              # emoji leading a line or bullet
     return t
 
 
@@ -136,8 +165,10 @@ def humanize(text, profile=None, seed=None, strip_bold=True, rhythm=True, regist
         if is_code:
             result.append(chunk)
             continue
-        t = _typography(chunk, profile, strip_bold)
+        t = _leaks(chunk)
+        t = _typography(t, profile, strip_bold)
         t = _phrases(t, own)
+        t = _hedges(t)
         t = _structure(t)
         t = _vocab(t, own)
         t = _dashes(t, profile, rng)
