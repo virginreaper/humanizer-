@@ -44,15 +44,27 @@ and splits or joins sentences. With no samples it falls back to a neutral defaul
 
 ## What it fixes automatically
 
-AI vocabulary (delve, pivotal, robust...), filler openers and closers ("In conclusion",
-"It's important to note"), chatbot residue, "serves as" / "boasts", "not X, it's Y",
-trailing `-ing` riders, em dash overuse, curly quotes, decorative bold and emoji headings,
-and uniform sentence rhythm. Code fences are never touched.
+- AI vocabulary (delve, pivotal, robust, streamline, paradigm, burgeoning...) and wordy phrases ("in order to", "serves as", "boasts").
+- Filler openers and closers: "In conclusion", "It's important to note", "Notably,", "Here's the thing", "To be clear", "Read that again", "The future looks bright".
+- Chatbot residue: "Great question!", "You're absolutely right!", "Would you like me to...?", "I hope this helps".
+- Knowledge-cutoff lines ("As of my last knowledge update...", "specific details are not widely documented").
+- Leaked chatbot markup: `citeturn0search0`, `:contentReference[oaicite:0]`, `oai_citation`, `utm_source=chatgpt.com`, `<|endoftext|>`.
+- "Not X, it's Y" framing, trailing `-ing` riders, hedge stacks ("could potentially"), em dash overuse, curly quotes (unless you use them), decorative bold, emoji in headings and at the start of lines, and uniform sentence rhythm.
+- Code fences are never touched, and phrases you really use are kept.
 
 ## What it only flags
 
-Vague attribution ("studies show") and forced triads need a real source or a human call.
-`--score` lists them.
+These can be real claims, so `--score` lists them for a human call:
+
+- Vague attribution ("studies show") and forced triads.
+- "Despite these challenges... continues to thrive", legacy language, notability padding ("active social media presence").
+- Placeholders like `[Name]` or `2025-XX-XX`, and "source ran out" disclaimers.
+- Arguing with nobody ("This isn't about X", "I'm not saying"), narrated candor, flattery.
+- Title Case headings, bullets that each start with a bold label, false ranges ("from X to Y, from A to B"), and three sentences in a row starting with the same word.
+
+## What it won't do
+
+It never adds facts, names, numbers or "personality". Rewrites only remove and simplify; a humanizer that injects fragments and fake candor leaves a new fingerprint of its own. Patterns come from Wikipedia's "Signs of AI writing" plus later catalogues; word lists go stale as models change.
 
 ## Limits
 

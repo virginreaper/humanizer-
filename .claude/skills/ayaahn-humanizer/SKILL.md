@@ -22,15 +22,29 @@ It does not "fix" his comma splices or run-ons on purpose, those are his voice.
    - Vague attribution ("studies show") and lists of three: name a source if the user gave one, else
      leave the claim as is and tell the user it needs a source.
    - Anything that reads stiff or changed the meaning. Meaning and facts must not change.
-   - Apply the rules in the user's existing humanizer skill (banned vocabulary, no negative
+   - Apply `references/ai-patterns.md`, `references/human-writing.md`, `references/voice.md` and the rules in the user's existing humanizer skill (banned vocabulary, no negative
      parallelism, uneven sentence rhythm, no summary closer) on top, silently.
 4. Reply with the final text. At most one short line on what it flagged. No lecture, no
    before/after table unless asked.
 
 ## Rules
 
+- Do not over-humanize. Never add fragments for drama, fake candor ("Honestly?"), asides or personality he did not write. Remove and simplify only; a rewrite full of invented punch is its own fingerprint.
+- Check by hand what the script only flags: Title Case headings (keep proper nouns), bold-label bullets, false ranges ("from X to Y"), "despite challenges... continues to thrive", placeholders like [Name], and three sentences in a row with the same opening word.
 - Never add facts, never drop content, never change the user's argument or opinion.
 - Keep formal pieces formal (no contractions in `academic`), keep casual pieces casual.
 - If the text is short (under ~40 words), skip the script and just rewrite by hand in his style.
 - To update the profile, the user adds new writing to `samples/<register>/` in the GitHub repo
   virginreaper/humanizer- and rebuilds the skill.
+
+## References
+
+Read these before humanizing or writing fresh text for Ayaahn:
+
+- `references/ai-patterns.md`: the full catalogue of AI tells to avoid (content, language, formatting, leaked markup), what is not a tell, and the habits of a bad humanizer.
+- `references/human-writing.md`: how to write like a person: the five habits, rhythm, word choice, tone, structure, a drafting routine and before/after examples.
+- `references/voice.md`: the voice rules and Ayaahn's measured writing habits (sentence length, contractions, dash and quote style, phrases he really uses).
+
+Writing fresh text (not rewriting): follow the drafting routine in `human-writing.md`, avoid everything in `ai-patterns.md`, match `voice.md`, and never invent facts, names, numbers or quotes.
+
+The same rules, plus the visual kit, live in the Humanizer design system: https://claude.ai/artifact/RHsQTRdybu3Gnt7HNyzuAd (private; the files above are the self-contained copy). Keep both in step when the pattern lists in `scripts/humanizer/patterns.py` change.

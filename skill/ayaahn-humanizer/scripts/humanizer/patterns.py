@@ -91,6 +91,14 @@ WORDS = {
     "paramount": "key", "myriad": "many", "plethora": "lot",
     "cutting-edge": "new", "game-changer": "big change", "game-changing": "major",
     "unparalleled": "unmatched", "unlock": "open up", "unleash": "release",
+    "paradigm": "model", "paradigms": "models", "spearhead": "lead", "spearheads": "leads",
+    "spearheaded": "led", "spearheading": "leading", "streamline": "simplify",
+    "streamlines": "simplifies", "streamlined": "simplified", "streamlining": "simplifying",
+    "cornerstone": "foundation", "burgeoning": "growing", "quintessential": "typical",
+    "underpin": "support", "underpins": "supports", "underpinned": "supported",
+    "underpinning": "supporting", "daunting": "hard", "bustling": "busy",
+    "ever-evolving": "changing", "impactful": "effective", "actionable": "practical",
+    "learnings": "lessons", "indelible": "lasting",
 }
 
 # "the political landscape" style metaphor only (not literal landscape)
@@ -123,4 +131,79 @@ CONTRACTIONS = [
     (r"\bwe are\b", "we're"), (r"\byou are\b", "you're"), (r"\bI have\b", "I've"),
     (r"\bwe have\b", "we've"), (r"\bthey have\b", "they've"), (r"\bI will\b", "I'll"),
     (r"\bwe will\b", "we'll"), (r"\bit will\b", "it'll"), (r"\blet us\b", "let's"),
+]
+
+
+# ---- second pass: tells catalogued by Wikipedia's "Signs of AI writing" and
+# later skill catalogues (blader/humanizer 3.1, avoid-ai-writing). Removed or
+# swapped like PHRASES, and counted by the detector as stock phrases.
+TELL_PHRASES = [
+    # chatbot residue and flattery
+    (r"you(?:'|’)re absolutely right[!.,]?\s*", ""),
+    (r"you are absolutely right[!.,]?\s*", ""),
+    (r"(?:that(?:'|’)s )?(?:a |an )?(?:great|excellent|fantastic|good|really good|sharp) (?:point|catch|observation)[!.]\s*", ""),
+    (r"of course[!]\s*", ""),
+    (r"(?:would you like|do you want|want) me to[^.!?\n]*\?\s*", ""),
+    (r"(?:is there )?anything else (?:i can|you(?:'|’)d like)[^.!?\n]*[.!?]\s*", ""),
+    (r"here(?:'|’)s (?:a |an )?(?:detailed |quick |brief )?(?:overview|breakdown|summary)[^.!?\n]*:\s*", ""),
+    # knowledge-limit disclaimers
+    (r"(?:as of|up to) my (?:last )?(?:knowledge|training)(?: update| cutoff| date)?(?: in \w+ \d{4})?,?\s*", ""),
+    (r"while (?:specific )?(?:details|information) (?:about [^,.]{2,60} )?(?:are|is) (?:limited|scarce|not (?:widely |publicly |extensively )?(?:available|documented|disclosed))[^,.]*,\s*", ""),
+    (r"based on (?:the )?(?:available|provided) (?:information|sources|search results),?\s*", ""),
+    # staged run-ups
+    (r"here(?:'|’)s the thing[:,.]?\s*", ""),
+    (r"the thing is,\s*", ""),
+    (r"honestly\?\s+", ""),
+    (r"to be clear,\s*", ""),
+    (r"don(?:'|’)t get me wrong,?\s*", ""),
+    (r"without further ado,?\s*", ""),
+    (r"(?:here(?:'|’)s )?what you need to know[:.]?\s*", ""),
+    (r"here(?:'|’)s the (?:kicker|catch|real story)[:,.]?\s*", ""),
+    # one-line closers
+    (r"read that again[.!]?\s*", ""),
+    (r"let that sink in[.!]?\s*", ""),
+    (r"that(?:'|’)?s the real (?:win|kicker|takeaway|story)[.!]?\s*", ""),
+    (r"that is the real (?:win|kicker|takeaway|story)[.!]?\s*", ""),
+    (r"the future (?:looks|is) bright[^.!?\n]*[.!?]\s*", ""),
+    (r"exciting times (?:lie|are) ahead[^.!?\n]*[.!?]\s*", ""),
+    (r"only time will tell[.!]?\s*", ""),
+    # filler adverbs and transitions
+    (r"notably,?\s+", ""),
+    (r"importantly,?\s+", ""),
+    (r"genuinely\s+", ""),
+    (r"that being said,?\s+", "Still, "),
+    (r"in addition,?\s+", "Also, "),
+    # sales language
+    (r"in the heart of ", "in "),
+    (r"a (?:diverse|rich) (?:array|tapestry|mix) of ", "many "),
+    (r"(?:functions|operates) as ", "is "),
+]
+
+# detection only: wording that can be a real claim, so it needs a human call
+FLAG_ONLY = [
+    ("significance-inflation",
+     r"\bdespite (?:these|its|the|such)\b[^.]{0,60}\bchallenges\b|\bcontinues? to thrive\b|\bindelible mark\b|"
+     r"\b(?:marking|marks) a (?:pivotal|key|significant) (?:moment|turning point)\b|\bkey turning point\b|\bdeeply rooted\b",
+     "stock 'despite challenges... continues to thrive' and legacy language", 7),
+    ("notability-padding",
+     r"\b(?:maintains?|has) an? (?:strong |active )?(?:social media|digital) presence\b|\bindependent (?:media )?coverage\b|"
+     r"\bprominent media outlets\b|\bfeatured in [^.]{0,80}\band other\b",
+     "lists of outlets or social presence standing in for what was said", 6),
+    ("cutoff-disclaimer",
+     r"\bnot (?:widely|publicly|extensively) (?:documented|available|disclosed)\b|\bin the (?:provided|available) (?:sources|search results)\b|"
+     r"\bmaintains? a low profile\b|\bkeeps? (?:his|her|their) personal (?:life|details) private\b",
+     "says the source ran out, then guesses; state what is missing or cut it", 10),
+    ("placeholder",
+     r"\[(?:your |insert |describe |add |entertainer|company|name|date|subject)[^\]\n]{0,60}\]|\b\d{4}-XX-XX\b|<!--\s*add\b",
+     "unfilled template text", 10),
+    ("arguing-with-no-one",
+     r"\b(?:this|that) isn(?:'|’)t (?:mainly |really |just )?about\b|\bi(?:'|’)m not saying\b|\bthis is not to say\b|"
+     r"\byou might think\b|\bone might be tempted\b|\ba tempting approach\b|\bsome might say\b",
+     "rejects an objection nobody raised", 5),
+    ("narrated-candor",
+     r"\bin the interest of full disclosure\b|\bi(?:'|’)d rather flag this\b|\bthe line i keep coming back to\b|\bi can(?:'|’)t stop thinking about\b",
+     "announces honesty instead of being specific", 5),
+    ("sycophancy",
+     r"\b(?:what a|such a) (?:great|wonderful|fascinating|insightful) (?:question|point|idea)\b|\byou(?:'|’)re (?:so )?right to\b",
+     "praise for the reader", 6),
 ]

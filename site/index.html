@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Humanizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* tokens from the Humanizer design system (tokens.json) */
+:root{--paper:#faf7f2;--paper-raised:#f1ece3;--ink:#1f1c18;--muted:#5c544a;--rule:#cfc6b8;--pen:#9a3412;--on-pen:#fff;--margin:#1d5f6b;--highlight:#f2e3b3;
+--font-serif:"Source Serif 4",Georgia,serif;--font-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+--space-1:4px;--space-2:8px;--space-3:16px;--space-4:24px;--space-5:32px;--space-6:48px;--radius-sm:2px;--radius-md:4px;--radius-lg:8px}
+@media (prefers-color-scheme:dark){:root{--paper:#1c1a17;--paper-raised:#27241f;--ink:#f1ebe1;--muted:#b3aa9c;--rule:#4a443b;--pen:#f0a070;--on-pen:#1c1a17;--margin:#7fc4cf;--highlight:#4a3f1f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/28px var(--font-serif)}
+main{max-width:680px;margin:0 auto;padding:var(--space-6) var(--space-3)}
+h1{font:600 72px/68px var(--font-serif);margin:0 0 var(--space-3)}
+h2{font:600 28px/34px var(--font-serif);margin:var(--space-6) 0 var(--space-3)}
+p{margin:0 0 var(--space-3)}
+.lede{font-size:20px;line-height:28px}
+.muted{color:var(--muted);font-size:14px;line-height:20px}
+pre,code{font:400 14px/22px var(--font-mono)}
+pre{background:var(--paper-raised);border:1px solid var(--rule);border-radius:var(--radius-lg);padding:var(--space-4);overflow-x:auto;margin:0 0 var(--space-3)}
+a{color:var(--pen)}a:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.btn{display:inline-block;background:var(--pen);color:var(--on-pen);padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);text-decoration:none}
+.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:var(--space-2) var(--space-3) var(--space-2) 0;border-bottom:1px solid var(--rule);font-size:15px;line-height:22px}
+del{color:var(--muted)}ins{background:var(--highlight);color:var(--ink);text-decoration:none}
+hr{border:0;border-top:1px solid var(--rule);margin:var(--space-6) 0 var(--space-3)}
+@media (max-width:560px){h1{font-size:48px;line-height:48px}}
+</style></head><body><main>
+<h1>Humanizer</h1>
+<p class="lede">Strips the usual AI tells out of text and nudges it toward your own writing style. Pure Python 3, no dependencies.</p>
+<p><a class="btn" href="https://github.com/virginreaper/humanizer-">View on GitHub</a></p>
+
+<h2>Use it</h2>
+<pre>python -m humanizer draft.txt
+python -m humanizer --score draft.txt
+cat draft.txt | python -m humanizer --seed 3</pre>
+<p class="muted">The first prints the rewritten text, with the score on stderr. The second only lists the AI tells found.</p>
+
+<h2>What it changes</h2>
+<table>
+<tr><th>Before</th><th>After</th></tr>
+<tr><td><del>in order to</del></td><td><ins>to</ins></td></tr>
+<tr><td><del>due to the fact that</del></td><td><ins>because</ins></td></tr>
+<tr><td><del>plays a pivotal role in</del></td><td><ins>matters for</ins></td></tr>
+<tr><td><del>serves as</del></td><td><ins>is</ins></td></tr>
+<tr><td><del>It's important to note that</del></td><td>cut</td></tr>
+</table>
+<p class="muted" style="margin-top:var(--space-3)">Also vocabulary (delve, pivotal, robust), chatbot residue, trailing -ing riders, em dash overuse and uniform sentence rhythm. Code fences are never touched.</p>
+
+<h2>Your voice</h2>
+<p>It learns from your own writing in <code>samples/</code>, one profile per kind: academic, essay, speech, personal. It keeps your curly quotes, dash style, British spelling and any phrase you really use. Run on your own samples, 94–100% of the words come back unchanged.</p>
+
+<h2>Limits</h2>
+<p>This is rule-based, not a language model. It removes patterns; it can't make dull writing good, and no tool can promise to beat a given AI detector. Read the output before you send it.</p>
+
+<h2>Inside Claude</h2>
+<p>Upload <code>skill/ayaahn-humanizer.zip</code> in claude.ai under Settings, Capabilities, Skills. Then paste text and say "humanize this".</p>
+<hr><p class="muted">Built with the Humanizer design system.</p>
+</main></body></html>
