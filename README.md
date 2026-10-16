@@ -73,6 +73,7 @@ This is rule-based, not a language model. It removes patterns; it can't make dul
 and no tool can promise to beat a given AI detector. Read the output before you send it.
 
 Tests: `python -m unittest discover -s tests -t .`
+Progress check on AI-written text: `python -m tests.eval` (corpus in `tests/ai_corpus/`, add your own).
 
 ## Use it inside Claude chat
 

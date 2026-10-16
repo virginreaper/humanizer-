@@ -32,6 +32,8 @@ PHRASES = [
     (r"(?:it is|it(?:'|’)s) worth (?:noting|mentioning) that,? ", ""),
     (r"as we (?:navigate|move forward|look ahead)[^,.]*,\s*", ""),
     (r"in the realm of ", "in "),
+    # "Despite these challenges, X continues to thrive" -> keep the claim, drop the stock lead-in
+    (r"despite (?:these|such|those|the|its|their) (?:many |various |numerous )?(?:challenges|obstacles|setbacks|difficulties|hurdles),\s*", ""),
     (r"a (?:paradigm|seismic) shift", "a big change"),
     (r"paradigm shifts?", "big changes"),
     (r"a (?:wealth|treasure trove) of ", "plenty of "),
@@ -174,8 +176,9 @@ CONTRACTIONS = [
 # swapped like PHRASES, and counted by the detector as stock phrases.
 TELL_PHRASES = [
     # chatbot residue and flattery
-    (r"you(?:'|’)re absolutely right[!.,]?\s*", ""),
-    (r"you are absolutely right[!.,]?\s*", ""),
+    (r"you(?:'|’)re (?:absolutely |totally )?right(?: to [^.!?\n]*)?[!.,]\s*", ""),
+    (r"you are (?:absolutely |totally )?right(?: to [^.!?\n]*)?[!.,]\s*", ""),
+    (r"resonates? with ", "appeals to "),
     (r"(?:that(?:'|’)s )?(?:a |an )?(?:great|excellent|fantastic|good|really good|sharp) (?:point|catch|observation)[!.]\s*", ""),
     (r"of course[!]\s*", ""),
     (r"(?:would you like|do you want|want) me to[^.!?\n]*\?\s*", ""),

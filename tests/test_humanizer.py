@@ -209,3 +209,16 @@ class Regressions(unittest.TestCase):
         self.assertNotIn("remiss", out)
         self.assertIn("Prices rose", out)
 
+    def test_despite_lead_in_dropped_claim_kept(self):
+        out = self.h("Despite these challenges, the regime continues to grow.")
+        self.assertEqual(out.strip(), "The regime continues to grow.")
+
+    def test_two_word_heading(self):
+        out = self.h("## Key Benefits\n\nThe benefits are clear.\n")
+        self.assertIn("## Key benefits", out)
+
+    def test_corpus_stays_clean(self):
+        from tests.eval import run, LIMIT
+        rows, worst = run()
+        self.assertLessEqual(worst, LIMIT, rows)
+

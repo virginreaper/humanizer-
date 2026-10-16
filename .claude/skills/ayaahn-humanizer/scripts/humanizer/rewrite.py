@@ -113,6 +113,9 @@ def _structure(t):
     # trailing "-ing" riders: ", highlighting how ..." -> "."
     tails = "|".join(map(re.escape, P.TAIL_VERBS))
     t = re.sub(rf"(?:,|\s—|\s--)\s+(?:{tails})\b(?:[^.!?\n]|\.(?=\d|\w\.))*([.!?])", r"\1", t, flags=re.I)
+    # vague "ensuring" riders ("ensuring long-term wellbeing"); concrete ones ("ensuring the trial finished") stay
+    t = re.sub(r"(?:,|\s—|\s--)\s+ensuring (?:long-term|lasting|sustained|continued|ongoing|a (?:seamless|smooth|bright|brighter|better)|"
+               r"that (?:everyone|all)\b)(?:[^.!?\n]|\.(?=\d|\w\.))*([.!?])", r"\1", t, flags=re.I)
     return t
 
 
@@ -144,8 +147,13 @@ def _headings(t, ctx):
     body = _HEAD.sub("", ctx)
     proper = _proper_nouns(body)
 
+    lowwords = set(re.findall(r"\b[a-z][a-z’']*\b", body))
+
     def fix(m):
         h = m.group(2)
+        two = re.fullmatch(r"([A-Z][a-z’']+) ([A-Z][a-z’']+)", h)
+        if two and two.group(2) not in proper and two.group(2).lower() in lowwords:
+            return m.group(1) + two.group(1) + " " + two.group(2).lower()    # "Key Benefits" -> "Key benefits"
         if not _title_case(h):
             return m.group(0)
         first = [True]
