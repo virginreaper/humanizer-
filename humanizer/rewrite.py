@@ -4,6 +4,7 @@ import random
 import re
 
 from . import patterns as P
+from .detect import _title_case
 from .style import DEFAULT_PROFILE
 from .textutil import (is_prose_paragraph, match_case, recapitalize, sentences,
                        split_fences, words)
@@ -106,6 +107,9 @@ def _structure(t):
     t = re.sub(r"\b(?:it|this|that)(?:(?:'|’)s| is)? ?(?:not|n(?:'|’)t) (?:just |only |merely |simply )?(?:about )?(?!that\b)"
                r"[^.;!?]{2,80}?[,;—-]+\s*(?:but |it(?:'|’)s |it is |this is )(?:also )?(?P<ab>about )?",
                parallel, t, flags=re.I)
+    # "X is not merely a trend; it is a shift." -> "X is a shift."
+    t = re.sub(r"\b(is|are|was|were)(?: not|n(?:'|’)t) (?:just|only|merely|simply) (?:an? |the )?(?!that\b)[^.;!?]{2,60}?[;,—-]+\s*"
+               r"(?:it(?:'|’)s |it is |this is |that is )(?=(?:an?|the|\w+) )", r"\1 ", t, flags=re.I)
     # trailing "-ing" riders: ", highlighting how ..." -> "."
     tails = "|".join(map(re.escape, P.TAIL_VERBS))
     t = re.sub(rf"(?:,|\s—|\s--)\s+(?:{tails})\b(?:[^.!?\n]|\.(?=\d|\w\.))*([.!?])", r"\1", t, flags=re.I)
@@ -120,6 +124,41 @@ def _typography(t, profile, strip_bold=True):
     t = re.sub(r"^(#+ )[^\w\n]*", r"\1", t, flags=re.M)       # emoji/arrows in headings
     t = _EMOJI_LEAD.sub(r"\1", t)                              # emoji leading a line or bullet
     return t
+
+
+_HEAD = re.compile(r"^(#{1,6} +)(.+)$", re.M)
+
+
+def _proper_nouns(body):
+    """Capitalised words that appear mid-sentence in the body: names, not Title Case."""
+    mid = set(re.findall(r"(?<=[a-z0-9,;:)\"”’] )([A-Z][A-Za-z’']*)", body))
+    # a capitalised sentence-opener is a name too if its lowercase form never appears
+    low = set(re.findall(r"\b[a-z][a-z’']*\b", body))
+    return mid | {w for w in re.findall(r"\b[A-Z][a-z’']+\b", body) if w.lower() not in low}
+
+
+def _headings(t, ctx):
+    """Title Case headings -> sentence case, keeping names and acronyms the body proves are names."""
+    if not _HEAD.search(t):
+        return t
+    body = _HEAD.sub("", ctx)
+    proper = _proper_nouns(body)
+
+    def fix(m):
+        h = m.group(2)
+        if not _title_case(h):
+            return m.group(0)
+        first = [True]
+
+        def word(w):
+            lead = first[0]
+            first[0] = False
+            core = w.group(0)
+            if lead or core.isupper() or core in proper or any(c.isupper() for c in core[1:]):
+                return core
+            return core.lower()
+        return m.group(1) + re.sub(r"[A-Za-z][A-Za-z’'-]*", word, h)
+    return _HEAD.sub(fix, t)
 
 
 def _dashes(t, profile, rng):
@@ -213,6 +252,7 @@ def humanize(text, profile=None, seed=None, strip_bold=True, rhythm=True, regist
             continue
         t = _leaks(chunk)
         t = _typography(t, profile, strip_bold)
+        t = _headings(t, text)
         t = _phrases(t, own)
         t = _serve_as(t, own)
         t = _hedges(t)

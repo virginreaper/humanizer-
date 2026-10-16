@@ -34,9 +34,17 @@ def findings(text):
     out = []
     low = text.lower()
 
-    def add(cat, n, note):
+    def add(cat, n, note, ex=()):
         if n:
-            out.append({"category": cat, "count": n, "note": note})
+            item = {"category": cat, "count": n, "note": note}
+            if ex:
+                item["examples"] = list(dict.fromkeys(ex))[:4]
+            out.append(item)
+
+    def hit(rx, src, flags=0):
+        """Count and sample the matched wording so a reviewer knows what to fix."""
+        found = [re.sub(r"\s+", " ", m.group(0)).strip() for m in re.finditer(rx, src, flags)]
+        return len(found), found
 
     ai_words = sum(len(re.findall(rf"\b{re.escape(w)}\b", low)) for w in P.WORDS
                    if w not in {"numerous", "many", "unlock"})
@@ -47,32 +55,36 @@ def findings(text):
         "run-ups, flattery, closers like 'Read that again'")
     add("markup-leak", sum(len(rx.findall(text)) for rx in _LEAK_RX),
         "chatbot citation markup or tracking parameters left in the text (near-certain)")
-    add("hedge-stack", len(_HEDGE.findall(text)), "'could potentially', 'might possibly'")
+    n, ex = hit(_HEDGE, text)
+    add("hedge-stack", n, "'could potentially', 'might possibly'", ex)
     for cat, pat, note, _ in P.FLAG_ONLY:
-        add(cat, len(re.findall(pat, low if cat != "placeholder" else text, re.I)), note + " (needs a human call)")
+        n, ex = hit(pat, low if cat != "placeholder" else text, re.I)
+        add(cat, n, note + " (needs a human call)", ex)
     add("title-case-headings", sum(1 for h in re.findall(r"^#{1,6} +(.+)$", text, re.M) if _title_case(h)),
         "every main word capitalised; sentence case reads more human (proper nouns need a human call)")
     add("inline-header-lists", len(re.findall(r"^\s*(?:[-*+]|\d+[.)]) +\*\*[^*\n]+:?\*\*:?", text, re.M)),
         "bullets that each start with a bold label")
-    add("false-range", len(re.findall(r"\bfrom [^.;]{3,60}? to [^.;]{3,60}?,? from [^.;]{3,60}? to\b", low)),
-        "'from X to Y, from A to B' with no real scale")
+    n, ex = hit(r"\bfrom [^.;]{3,60}? to [^.;]{3,60}?,? from [^.;]{3,60}? to\b", low)
+    add("false-range", n, "'from X to Y, from A to B' with no real scale", ex)
     add("repeated-openers", _repeated_openers(text), "three or more sentences in a row starting with the same word")
     add("emoji-lines", len(re.findall(rf"^[ \t]*(?:[-*+]|\d+[.)])?[ \t]*[{_EMOJI}]", text, re.M)),
         "emoji leading lines or bullets")
+    n2, ex2 = hit(r"\b(?:is|are|was|were)(?: not|n(?:'|’)t) (?:just|only|merely|simply) [^.;!?]{2,60}?[;,—-]+ ?(?:it(?:'|’)s|it is|this is|that is)\b", low)
+    add("negative-parallelism", n2, "'X is not merely Y; it is Z' framing", ex2)
     add("negative-parallelism",
         len(re.findall(r"\b(?:it|this|that)(?:(?:'|’)s| is| was)? ?(?:not|n(?:'|’)t) (?:just |only |merely |simply )?(?!that\b)"
                        r"[^.;!?]{2,60}?[,;—-]+ ?(?:but|it(?:'|’)s|it is|this is)\b", low)),
         "'not X, it's Y' framing")
     tails = "|".join(P.TAIL_VERBS + P.TAIL_VERBS_FLAG_ONLY)
     add("ing-tail", len(re.findall(rf",\s+(?:{tails})\b", low)), "vague -ing clause tacked on a sentence")
-    add("vague-attribution", len(re.findall(P.VAGUE_ATTRIBUTION, low)),
-        "needs a named source (cannot be fixed automatically)")
+    n, ex = hit(P.VAGUE_ATTRIBUTION, low)
+    add("vague-attribution", n, "needs a named source (cannot be fixed automatically)", ex)
     add("em-dashes", max(text.count("—") - 1, 0), "em dashes beyond the first")
     add("bold", len(re.findall(r"\*\*[^*]+\*\*", text)), "decorative bold")
     add("emoji-headings", len(re.findall(r"^#+ .*[\U0001F300-\U0001FAFF☀-➿]", text, re.M)),
         "emoji in headings")
-    add("triads", len(re.findall(r"\b[\w-]+, [\w-]+,? and [\w-]+\b", low)),
-        "possible forced list of three")
+    n, ex = hit(r"\b[\w-]+, [\w-]+,? and [\w-]+\b", low)
+    add("triads", n, "possible forced list of three", ex)
     return out
 
 

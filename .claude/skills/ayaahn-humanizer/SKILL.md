@@ -19,12 +19,15 @@ It does not "fix" his comma splices or run-ons on purpose, those are his voice.
      `--register academic`.
    - If stderr says `warning: profile.json missing`, the style rules were not applied: tell the user and rebuild with `skill/build.sh`.
    - The stderr line shows the style used, score before/after, and anything it could only flag.
+     Each `left:` line quotes the exact wording it could not fix. Deal with every one by hand in step 3.
+     A `rhythm:` line means the sentence lengths are too even: change a few by splitting or joining, never by adding words.
 3. Read `/tmp/out.txt` yourself. Fix what a script can't:
    - Vague attribution ("studies show") and lists of three: name a source if the user gave one, else
      leave the claim as is and tell the user it needs a source.
    - Anything that reads stiff or changed the meaning. Meaning and facts must not change.
    - Apply `references/ai-patterns.md`, `references/human-writing.md`, `references/voice.md` and the rules in the user's existing humanizer skill (banned vocabulary, no negative
      parallelism, uneven sentence rhythm, no summary closer) on top, silently.
+   - Last check before replying: run `python scripts/run.py /tmp/out.txt --score`. Nothing in `ai-vocabulary`, `stock-phrases`, `negative-parallelism`, `ing-tail` or `markup-leak` should remain. Re-read once for anything the script broke (a/an, "to" after a swapped verb, a dropped number or name).
 4. Reply with the final text. At most one short line on what it flagged. No lecture, no
    before/after table unless asked.
 

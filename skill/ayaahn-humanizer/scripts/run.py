@@ -25,8 +25,15 @@ if not prof["samples"]:
                      "Rebuild the skill with skill/build.sh.\n")
 reg = pick_register(prof, text).get("register", "none") if a.register == "auto" else a.register
 out = humanize(text, prof, seed=a.seed, register=a.register)
-flags = [f"{f['category']} x{f['count']}" for f in score(out)["findings"]
+left = score(out)["findings"]
+flags = [f"{f['category']} x{f['count']}" for f in left
          if f["category"] in {"vague-attribution", "triads", "ai-vocabulary", "stock-phrases"}]
 sys.stderr.write(f"style: {reg} | ai-tell score {score(text)['score']} -> {score(out)['score']}"
                  + (f" | still flagged: {', '.join(flags)}" if flags else "") + "\n")
+for f in left:                                   # exact wording the script left for you to fix by hand
+    if f.get("examples"):
+        sys.stderr.write(f"  left: {f['category']}: " + " | ".join(f["examples"]) + "\n")
+b = score(out)["burstiness"]
+if b is not None and b < 0.45:
+    sys.stderr.write(f"  rhythm: sentence lengths are even (burstiness {b}); vary a few by hand, without adding words\n")
 sys.stdout.write(out)

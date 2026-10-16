@@ -50,17 +50,18 @@ and splits or joins sentences. With no samples it falls back to a neutral defaul
 - Knowledge-cutoff lines ("As of my last knowledge update...", "specific details are not widely documented").
 - Leaked chatbot markup: `citeturn0search0`, `:contentReference[oaicite:0]`, `oai_citation`, `utm_source=chatgpt.com`, `<|endoftext|>`.
 - "Not X, it's Y" framing, trailing `-ing` riders, hedge stacks ("could potentially"), em dash overuse, curly quotes (unless you use them), decorative bold, emoji in headings and at the start of lines, and uniform sentence rhythm.
+- Title Case headings become sentence case (names the body proves are names stay capitalised), and filler sentences like "it would be remiss not to acknowledge..." are cut.
 - Code fences are never touched, and phrases you really use are kept.
 
 ## What it only flags
 
-These can be real claims, so `--score` lists them for a human call:
+These can be real claims, so `--score` lists them, with the exact wording found, for a human call:
 
 - Vague attribution ("studies show") and forced triads.
 - "Despite these challenges... continues to thrive", legacy language, notability padding ("active social media presence").
 - Placeholders like `[Name]` or `2025-XX-XX`, and "source ran out" disclaimers.
 - Arguing with nobody ("This isn't about X", "I'm not saying"), narrated candor, flattery.
-- Title Case headings, bullets that each start with a bold label, false ranges ("from X to Y, from A to B"), and three sentences in a row starting with the same word.
+- Bullets that each start with a bold label, false ranges ("from X to Y, from A to B"), and three sentences in a row starting with the same word.
 
 ## What it won't do
 

@@ -184,3 +184,28 @@ class Regressions(unittest.TestCase):
         out = self.h("Media plays a pivotal role in shaping opinion.")
         self.assertIn("is central to shaping", out)
 
+    def test_empower_keeps_to(self):
+        out = self.h("Tools empowering users to decide.")
+        self.assertIn("enabling users to decide", out)
+
+    def test_paradigm_shift(self):
+        self.assertNotIn("model shift", self.h("It is a paradigm shift in law."))
+
+    def test_title_case_heading_sentence_cased_but_names_kept(self):
+        out = self.h("# The Rise Of Apple In India\n\nApple grew fast in India last year, said Mr Rao.\n")
+        self.assertIn("# The rise of Apple in India", out)
+
+    def test_not_merely_framing(self):
+        out = self.h("This phenomenon is not merely a trend; it is a profound shift.")
+        self.assertNotIn("merely", out)
+        self.assertIn("a deep shift", out)
+
+    def test_detector_gives_examples(self):
+        f = score("Studies show that it works. Experts say so.")["findings"]
+        self.assertTrue(any(x.get("examples") for x in f))
+
+    def test_filler_sentence_removed(self):
+        out = self.h("The law changed. However, it would be remiss not to acknowledge the cost. Prices rose.")
+        self.assertNotIn("remiss", out)
+        self.assertIn("Prices rose", out)
+
