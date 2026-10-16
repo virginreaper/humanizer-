@@ -56,6 +56,8 @@ def recapitalize(text):
         before = text[:m.start()].split()
         if before and before[-1].lower() in ABBREV:
             return m.group(0)
+        if before and before[-1].endswith(("...", "…")):     # a trailing ellipsis rarely ends a sentence
+            return m.group(0)
         return m.group(1) + m.group(2).upper()
     text = re.sub(r"(^|\n\s*|(?<=[.!?])[\"')\]]*\s+)([a-z])", fix, text)
     return text

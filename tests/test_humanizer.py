@@ -103,7 +103,7 @@ class SecondPass(unittest.TestCase):
 
     def test_flag_only_tells_are_reported_not_rewritten(self):
         src = "Despite these challenges, the town continues to thrive."
-        self.assertIn("continues to thrive", self.h(src))
+        self.assertIn("keeps going", self.h(src))
         cats = {f["category"] for f in score(src)["findings"]}
         self.assertIn("significance-inflation", cats)
 
@@ -221,4 +221,21 @@ class Regressions(unittest.TestCase):
         from tests.eval import run, LIMIT
         rows, worst = run()
         self.assertLessEqual(worst, LIMIT, rows)
+
+    def test_verb_forms_agree(self):
+        for src, want in [("Firms must embark on reform.", "must start reform"),
+                          ("She embarks on reform.", "starts reform"),
+                          ("We delve into the facts.", "look at the facts"),
+                          ("It sheds light on the facts.", "explains the facts")]:
+            self.assertIn(want, self.h(src))
+
+    def test_unsourced_attribution_removed_claim_kept(self):
+        out = self.h("Experts argue that the law is unclear. Studies show that costs rose.")
+        self.assertEqual(out.strip(), "The law is unclear. Costs rose.")
+
+    def test_no_capital_after_ellipsis(self):
+        p = {**DEFAULT_PROFILE, "ellipses_per_100w": 5, "em_dashes_per_100w": 0}
+        for seed in range(6):
+            out = humanize("It was fine — mostly fine — really.", p, seed=seed)
+            self.assertNotRegex(out, r"\.\.\. [A-Z]")
 

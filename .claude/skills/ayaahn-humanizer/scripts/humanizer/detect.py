@@ -83,7 +83,8 @@ def findings(text):
     add("bold", len(re.findall(r"\*\*[^*]+\*\*", text)), "decorative bold")
     add("emoji-headings", len(re.findall(r"^#+ .*[\U0001F300-\U0001FAFF☀-➿]", text, re.M)),
         "emoji in headings")
-    n, ex = hit(r"\b[\w-]+, [\w-]+,? and [\w-]+\b", low)
+    # lowercase items only: "Instagram, X, and TikTok" is a real list of names, not a rhetorical triad
+    n, ex = hit(r"\b[a-z][\w-]*, [a-z][\w-]*,? and [a-z][\w-]*\b", text)
     add("triads", n, "possible forced list of three", ex)
     return out
 

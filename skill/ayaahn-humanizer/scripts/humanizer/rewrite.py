@@ -37,6 +37,18 @@ def _leaks(t):
     return t
 
 
+_ATTRIB = re.compile(r"(^|(?<=[.!?] )|(?<=\n))(?:studies|research|surveys|experts|researchers|analysts|scholars|critics|observers)"
+                     r"(?: have| has)? (?:show|shows|showed|suggest|suggests|indicate|indicates|found|noted|argue|argues|say|says|"
+                     r"believe|believes|agree|agrees)(?: that)?,? (?=[A-Za-z])", re.I | re.M)
+_ATTRIB2 = re.compile(r"(^|(?<=[.!?] )|(?<=\n))it is (?:widely|generally|commonly) (?:believed|known|accepted|agreed) that,? ", re.I | re.M)
+
+
+def _attribution(t):
+    """"Experts argue that X" -> "X". The fake authority goes; the claim stays, and run.py tells the user it is unsourced."""
+    t = _ATTRIB.sub(r"\1", t)
+    return _ATTRIB2.sub(r"\1", t)
+
+
 def _hedges(t):
     return _HEDGE.sub(lambda m: m.group(1), t)
 
@@ -234,7 +246,38 @@ def _rhythm(par, profile, rng):
                 continue
         out.append(s)
         i += 1
-    return " ".join(out)
+    return _burst(" ".join(out), profile, rng)
+
+
+_SPLIT_AT = re.compile(r";\s+|,\s+(?=(?:but|yet|so)\s)", re.I)
+
+
+def _burst(par, profile, rng):
+    """Even sentence lengths are a tell. If a paragraph is too regular, split its longest sentence at a
+    semicolon or ', but', and join the two shortest neighbours. Moves words around; adds none."""
+    sents = sentences(par)
+    if len(sents) < 3:
+        return par
+    lens = [len(words(x)) for x in sents]
+    mean = sum(lens) / len(lens)
+    sd = (sum((n - mean) ** 2 for n in lens) / len(lens)) ** 0.5
+    want = min(0.45, profile["sentence_len_stdev"] / max(profile["mean_sentence_len"], 1))
+    if sd / max(mean, 1) >= want:
+        return par
+    i = max(range(len(sents)), key=lambda k: lens[k])
+    if lens[i] >= 18:
+        cuts = [m for m in _SPLIT_AT.finditer(sents[i]) if 6 <= len(words(sents[i][:m.start()])) <= lens[i] - 6]
+        if cuts:
+            m = cuts[len(cuts) // 2]
+            head, tail = sents[i][:m.start()], sents[i][m.end():]
+            sents[i:i + 1] = [head + ".", tail[0].upper() + tail[1:]]
+            lens[i:i + 1] = [len(words(head)), len(words(tail))]
+    j = min(range(len(sents) - 1), key=lambda k: lens[k] + lens[k + 1])
+    if lens[j] < 10 and lens[j + 1] < 10 and sents[j].endswith(".") and words(sents[j + 1]):
+        first = words(sents[j + 1])[0].lower()
+        if first in _SUBJECT_STARTS and not sents[j + 1].startswith(("I ", "I’", "I'")):
+            sents[j:j + 2] = [sents[j][:-1] + ", and " + sents[j + 1][0].lower() + sents[j + 1][1:]]
+    return " ".join(sents)
 
 
 def _casual(t, profile):
@@ -263,6 +306,7 @@ def humanize(text, profile=None, seed=None, strip_bold=True, rhythm=True, regist
         t = _headings(t, text)
         t = _phrases(t, own)
         t = _serve_as(t, own)
+        t = _attribution(t)
         t = _hedges(t)
         t = _structure(t)
         t = _vocab(t, own)

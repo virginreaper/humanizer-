@@ -25,6 +25,9 @@ if not prof["samples"]:
                      "Rebuild the skill with skill/build.sh.\n")
 reg = pick_register(prof, text).get("register", "none") if a.register == "auto" else a.register
 out = humanize(text, prof, seed=a.seed, register=a.register)
+for f in score(text)["findings"]:                # claims the script un-attributed; the user may want to add a source
+    if f["category"] == "vague-attribution" and f.get("examples"):
+        sys.stderr.write("  unsourced (attribution removed, claim kept): " + " | ".join(f["examples"]) + "\n")
 left = score(out)["findings"]
 flags = [f"{f['category']} x{f['count']}" for f in left
          if f["category"] in {"vague-attribution", "triads", "ai-vocabulary", "stock-phrases"}]
