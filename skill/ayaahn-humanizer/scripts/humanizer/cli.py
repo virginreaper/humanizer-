@@ -12,7 +12,8 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog="humanizer", description="Strip AI tells and match your own writing style.")
     ap.add_argument("file", nargs="?", help="input file (default: stdin)")
     ap.add_argument("-o", "--out", help="write result here (default: stdout)")
-    ap.add_argument("--samples", default="samples", help="folder of your own .txt/.md writing (default: ./samples)")
+    ap.add_argument("--samples", default=str(Path(__file__).resolve().parent.parent / "samples"),
+                    help="folder of your own .txt/.md writing (default: samples/ next to the package)")
     ap.add_argument("--profile", help="saved profile JSON (overrides --samples)")
     ap.add_argument("--learn", action="store_true", help="analyze samples, save profile.json, and exit")
     ap.add_argument("--score", action="store_true", help="only print the AI-tell report")
@@ -34,6 +35,8 @@ def main(argv=None):
         return 0
 
     prof = load_profile(a.profile, a.samples)
+    if not prof["samples"]:
+        sys.stderr.write("warning: no style profile found, using neutral defaults (see --samples / --profile)\n")
     out = humanize(text, prof, seed=a.seed, register=a.register, strip_bold=not a.keep_bold, rhythm=not a.no_rhythm)
     reg = pick_register(prof, text).get("register", "none") if a.register == "auto" else a.register
     before, after = score(text)["score"], score(out)["score"]

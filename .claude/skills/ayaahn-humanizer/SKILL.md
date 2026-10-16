@@ -17,6 +17,7 @@ It does not "fix" his comma splices or run-ons on purpose, those are his voice.
    - It auto-picks the closest style: `academic`, `essay`, `speech` or `personal`.
      If the pick looks wrong for the piece (e.g. a legal paper treated as `essay`), rerun with
      `--register academic`.
+   - If stderr says `warning: profile.json missing`, the style rules were not applied: tell the user and rebuild with `skill/build.sh`.
    - The stderr line shows the style used, score before/after, and anything it could only flag.
 3. Read `/tmp/out.txt` yourself. Fix what a script can't:
    - Vague attribution ("studies show") and lists of three: name a source if the user gave one, else

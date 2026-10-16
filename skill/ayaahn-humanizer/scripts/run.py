@@ -19,7 +19,10 @@ text = Path(a.file).read_text(encoding="utf-8") if a.file else sys.stdin.read()
 if a.score:
     print(json.dumps(score(text), indent=2))
     sys.exit(0)
-prof = load_profile(here / "profile.json")
+prof = load_profile(here / "profile.json", here.parent.parent.parent / "samples")
+if not prof["samples"]:
+    sys.stderr.write("warning: profile.json missing, so no style rules were applied (quotes, dashes, register). "
+                     "Rebuild the skill with skill/build.sh.\n")
 reg = pick_register(prof, text).get("register", "none") if a.register == "auto" else a.register
 out = humanize(text, prof, seed=a.seed, register=a.register)
 flags = [f"{f['category']} x{f['count']}" for f in score(out)["findings"]

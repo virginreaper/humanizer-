@@ -60,9 +60,10 @@ def findings(text):
     add("emoji-lines", len(re.findall(rf"^[ \t]*(?:[-*+]|\d+[.)])?[ \t]*[{_EMOJI}]", text, re.M)),
         "emoji leading lines or bullets")
     add("negative-parallelism",
-        len(re.findall(r"\bnot (?:just |only |merely |simply )?[^.;!?]{2,60}?[,;—-]+ ?(?:but|it(?:'|’)s|it is)\b", low)),
+        len(re.findall(r"\b(?:it|this|that)(?:(?:'|’)s| is| was)? ?(?:not|n(?:'|’)t) (?:just |only |merely |simply )?(?!that\b)"
+                       r"[^.;!?]{2,60}?[,;—-]+ ?(?:but|it(?:'|’)s|it is|this is)\b", low)),
         "'not X, it's Y' framing")
-    tails = "|".join(P.TAIL_VERBS)
+    tails = "|".join(P.TAIL_VERBS + P.TAIL_VERBS_FLAG_ONLY)
     add("ing-tail", len(re.findall(rf",\s+(?:{tails})\b", low)), "vague -ing clause tacked on a sentence")
     add("vague-attribution", len(re.findall(P.VAGUE_ATTRIBUTION, low)),
         "needs a named source (cannot be fixed automatically)")

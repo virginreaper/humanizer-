@@ -129,3 +129,58 @@ class SecondPass(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class Regressions(unittest.TestCase):
+    def h(self, s, **kw):
+        return humanize(s, DEFAULT_PROFILE, seed=1, **kw)
+
+    def test_serve_as_not_mangled(self):
+        out = self.h("He acts as if nothing happened. She stands as high as the wall.")
+        self.assertIn("acts as if", out)
+        self.assertIn("stands as high as", out)
+        self.assertNotIn("will are", self.h("The firm will serve as a guide."))
+        self.assertIn("will be a guide", self.h("The firm will serve as a guide."))
+
+    def test_article_agrees_with_swapped_word(self):
+        self.assertIn("An important vote", self.h("A crucial vote."))
+
+    def test_inflected_ai_words(self):
+        out = self.h("He delved into the files and was delving again.").lower()
+        self.assertNotIn("delv", out)
+
+    def test_ing_tail_survives_decimal(self):
+        self.assertEqual(self.h("Costs rose, highlighting a 2.5% rise for firms.").strip(), "Costs rose.")
+
+    def test_real_claims_after_ing_kept(self):
+        s = "The judge ruled early, ensuring the trial finished on time."
+        self.assertIn("finished on time", self.h(s))
+
+    def test_have_not_contracted_as_main_verb(self):
+        p = {**DEFAULT_PROFILE, "contractions_per_100w": 5}
+        out = humanize("I have a dog. We have to go. I have been there.", p, seed=1)
+        self.assertIn("I have a dog", out)
+        self.assertIn("We have to go", out)
+        self.assertIn("I’ve been", out.replace("'", "’"))
+
+    def test_negative_parallelism_keeps_about_and_clausal_form(self):
+        self.assertIn("about trust", self.h("It is not about money, but about trust."))
+        s = "It is not that I don’t care, it is that I can’t."
+        self.assertRegex(self.h(s), r"(?:not|n.t) that I don")
+
+    def test_year_range_stays_a_range(self):
+        self.assertIn("2020–2024", self.h("The years 2020—2024 were hard."))
+
+    def test_detector_ignores_plain_not_but(self):
+        s = "The judgment was not unanimous, but the majority held firm."
+        names = {f["category"] for f in score(s)["findings"]}
+        self.assertNotIn("negative-parallelism", names)
+
+    def test_isnt_just_framing(self):
+        out = self.h("This isn't just a technological shift, it's a cultural transformation.")
+        self.assertIn("a cultural transformation", out)
+        self.assertNotIn("just a technological", out)
+
+    def test_role_in_gerund(self):
+        out = self.h("Media plays a pivotal role in shaping opinion.")
+        self.assertIn("is central to shaping", out)
+

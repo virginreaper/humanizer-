@@ -48,6 +48,45 @@ def _phrases(t, own):
     return t
 
 
+_AUX_BEFORE = {"will", "would", "can", "could", "should", "may", "might", "must", "shall",
+               "to", "not", "also", "still", "then", "only", "just", "always", "never", "often"}
+_AS_PLURAL_SUBJ = {"they", "we", "you", "i", "these", "those", "which", "who"}
+_SERVE_AS = re.compile(r"\b(serves|serve|stands|stand|acts|act)\s+as\s+(?=(?:a|an|the|one|both|my|our|your|his|her|its|their)\b)", re.I)
+
+
+def _serve_as(t, own):
+    """"serves as a" -> "is a". Leaves "acts as if", "stands as high as", "serve as counsel"."""
+    def sub(m):
+        verb = m.group(1).lower()
+        if m.group(0).lower().strip() in own:
+            return m.group(0)
+        prev = re.findall(r"[A-Za-z']+", t[max(0, m.start() - 20):m.start()])
+        before = prev[-1].lower() if prev else ""
+        if verb.endswith("s"):
+            rep = "is "
+        elif before in _AUX_BEFORE:
+            rep = "be "
+        elif not before or before in {"and", "or", "but"} and not prev[:-1]:
+            rep = "be "                      # imperative: "Stand as a witness."
+        else:
+            rep = "are "
+        return match_case(m.group(0), rep)
+    return _SERVE_AS.sub(sub, t)
+
+
+def _article(t):
+    """Fix "a" / "an" in front of a word the vocab pass swapped ("a crucial" -> "an important")."""
+    def sub(m):
+        art, word = m.group(1), m.group(2)
+        want = "an" if word[0].lower() in "aeiou" else "a"
+        return match_case(art, want) + " " + word
+    return re.sub(r"\b([Aa]n?) (" + "|".join(map(re.escape, _SWAPPED)) + r")\b", sub, t)
+
+
+_SWAPPED = sorted({v.split()[0] for v in P.WORDS.values()} | {"many", "to", "for", "smoothly", "because"},
+                  key=len, reverse=True)
+
+
 def _vocab(t, own):
     def landscape(m):
         return match_case(m.group(1), m.group(1)) + (" scene" if m.group(1).lower() in P.LANDSCAPE_CTX else " landscape")
@@ -59,11 +98,17 @@ def _vocab(t, own):
 
 def _structure(t):
     # "It's not just X, it's Y." -> "It's Y."
-    t = re.sub(r"\b(?:it|this|that)(?:'|’)?s? (?:is )?not (?:just |only |merely |simply )?(?:about )?[^.;!?]{2,80}?[,;—-]+\s*(?:but |it(?:'|’)s |it is |this is )(?:also |about )?",
-               lambda m: "It is ", t, flags=re.I)
+    def parallel(m):
+        start = m.start()
+        head = m.string[:start].rstrip(" \t")
+        sentence_start = not head or head[-1] in ".!?\n\"“”‘("
+        return ("It is " if sentence_start else "it is ") + ("about " if m.group("ab") else "")
+    t = re.sub(r"\b(?:it|this|that)(?:(?:'|’)s| is)? ?(?:not|n(?:'|’)t) (?:just |only |merely |simply )?(?:about )?(?!that\b)"
+               r"[^.;!?]{2,80}?[,;—-]+\s*(?:but |it(?:'|’)s |it is |this is )(?:also )?(?P<ab>about )?",
+               parallel, t, flags=re.I)
     # trailing "-ing" riders: ", highlighting how ..." -> "."
     tails = "|".join(map(re.escape, P.TAIL_VERBS))
-    t = re.sub(rf"(?:,|\s—|\s--)\s+(?:{tails})\b[^.!?]*([.!?])", r"\1", t, flags=re.I)
+    t = re.sub(rf"(?:,|\s—|\s--)\s+(?:{tails})\b(?:[^.!?\n]|\.(?=\d|\w\.))*([.!?])", r"\1", t, flags=re.I)
     return t
 
 
@@ -78,6 +123,7 @@ def _typography(t, profile, strip_bold=True):
 
 
 def _dashes(t, profile, rng):
+    t = re.sub(r"(?<=\d)\s*—\s*(?=\d)", "–", t)               # 2020—2024 is a range, not an aside
     n_words = max(len(words(t)), 1)
     budget = round(profile["em_dashes_per_100w"] * n_words / 100)
     ell = profile["ellipses_per_100w"] > 0.15
@@ -106,7 +152,7 @@ def _contractions(t, profile, rng):
         if "n't" not in rep:                 # "here we are." must not become "here we're."
             pat += r"(?=\s+[A-Za-z])"
         t = re.sub(pat, lambda m, r=rep: match_case(m.group(0), r) if rng.random() < p else m.group(0),
-                   t, flags=re.I if pat[0] != r"\bI" else 0)
+                   t, flags=0 if pat.startswith(r"\bI") else re.I)
     return t
 
 
@@ -168,9 +214,11 @@ def humanize(text, profile=None, seed=None, strip_bold=True, rhythm=True, regist
         t = _leaks(chunk)
         t = _typography(t, profile, strip_bold)
         t = _phrases(t, own)
+        t = _serve_as(t, own)
         t = _hedges(t)
         t = _structure(t)
         t = _vocab(t, own)
+        t = _article(t)
         t = _dashes(t, profile, rng)
         t = _contractions(t, profile, rng)
         pars = re.split(r"(\n\s*\n)", t)
